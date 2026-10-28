@@ -82,6 +82,7 @@ interface State {
   snapStep: number;
   quality: 'high' | 'std';
   showEstimate: boolean;
+  showPhoto3d: boolean;
   past: Project[];
   future: Project[];
   ready: boolean;
@@ -129,6 +130,7 @@ export const useStore = create<State>((set, get) => ({
   snapStep: 100,
   quality: 'high',
   showEstimate: false,
+  showPhoto3d: false,
   past: [],
   future: [],
   ready: false,

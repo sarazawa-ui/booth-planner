@@ -23,6 +23,20 @@ export async function importModelFile(file: File, at?: { x: number; y: number })
   });
 }
 
+/** 写真から作ったモデル(GLB, m 単位, Y-up)を寸法そのままで配置 */
+export function placeGeneratedModel(glb: Blob, name: string, size: { w: number; d: number; h: number }) {
+  const asset = makeAsset(glb, `${name}.glb`, 'model', 'glb');
+  const st = useStore.getState();
+  st.addAsset(asset);
+  return st.addItem('model', undefined, undefined, {
+    w: Math.round(size.w),
+    d: Math.round(size.d),
+    h: Math.round(size.h),
+    label: name,
+    model: { assetId: asset.id, unit: 1000, upAxis: 'y' },
+  });
+}
+
 export async function importImageAsset(file: File) {
   if (!file.type.startsWith('image/')) throw new Error(`${file.name}: 画像ファイルではありません`);
   const asset = makeAsset(file, file.name, 'image');

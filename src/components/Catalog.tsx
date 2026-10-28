@@ -5,6 +5,8 @@ import { Icon } from './ui';
 import { fmtMm } from '../lib/geom';
 import { importModelFile } from '../lib/importer';
 
+const PHOTO_ICON = 'M3 7h4l2-3h6l2 3h4v13H3z M12 10a3.5 3.5 0 1 0 0 7a3.5 3.5 0 1 0 0-7';
+
 export default function Catalog() {
   const [cat, setCat] = useState<CategoryId>('stage');
   const addItem = useStore((s) => s.addItem);
@@ -68,6 +70,15 @@ export default function Catalog() {
           </span>
         </button>
         <input ref={fileRef} type="file" accept=".glb,.gltf,.obj,.stl,.fbx" multiple hidden onChange={(e) => onModel(e.target.files)} />
+        <button className="cat-item import" onClick={() => useStore.getState().set({ showPhoto3d: true })}>
+          <span className="cat-icon">
+            <Icon d={PHOTO_ICON} />
+          </span>
+          <span className="cat-text">
+            <b>写真から3Dを作る</b>
+            <small>背景透過のPNG 1〜4枚</small>
+          </span>
+        </button>
         <p className="cat-help">図面・3Dビューにファイルを直接ドロップしても配置できます。画像をドロップすると選択中の壁・パネルに貼り付けます。</p>
       </div>
     </aside>

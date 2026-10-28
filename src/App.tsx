@@ -6,11 +6,13 @@ import Inspector from './components/Inspector';
 import PlanEditor from './components/plan/PlanEditor';
 import Scene3D from './components/three/Scene3D';
 import EstimateModal from './components/EstimateModal';
+import PhotoModelModal from './components/PhotoModelModal';
 
 export default function App() {
   const view = useStore((s) => s.view);
   const ready = useStore((s) => s.ready);
   const showEstimate = useStore((s) => s.showEstimate);
+  const showPhoto3d = useStore((s) => s.showPhoto3d);
 
   useEffect(() => {
     useStore.getState().init();
@@ -21,6 +23,8 @@ export default function App() {
       const el = e.target as HTMLElement;
       if (el.closest('input, textarea, select')) return;
       const st = useStore.getState();
+      // 写真から3Dの画面中は、背後の選択アイテムを消したり動かしたりしない
+      if (st.showPhoto3d) return;
       const ctrl = e.ctrlKey || e.metaKey;
       if (ctrl && e.key.toLowerCase() === 'z') {
         e.preventDefault();
@@ -77,6 +81,7 @@ export default function App() {
         <Inspector />
       </div>
       {showEstimate && <EstimateModal />}
+      {showPhoto3d && <PhotoModelModal />}
     </div>
   );
 }
