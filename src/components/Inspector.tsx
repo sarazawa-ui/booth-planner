@@ -1,3 +1,4 @@
+import { useRef, useState } from 'react';
 import { useStore, useSelectedItem, useSelectedWall } from '../store';
 import { CARPET_COLORS, WALL_COLORS, defOf, itemLabel } from '../catalog';
 import type { Booth, FloorType, Item, OpenType, Wall } from '../types';
@@ -306,12 +307,32 @@ const BOOTH_PRESETS = [
   { name: '9小間 9×9m', w: 8910, d: 8910 },
 ];
 
+const CUSTOM_SIZE = 'custom';
+/** 小間の間口・奥行の入力上限 */
+const BOOTH_MAX = 60000;
+
 function BoothPanel() {
   const st = useStore();
   const p = useStore((s) => s.project);
   const b = p.booth;
   const setB = (patch: Partial<Booth>, regen = false) => st.setBooth(patch, regen);
   const meta = (k: keyof typeof p.meta) => (v: string) => st.mutate((pp) => void (pp.meta[k] = v));
+  // 規格と同じ寸法でも「カスタム」を選んだ間は表示を保つ
+  const [customPicked, setCustomPicked] = useState(false);
+  const sizeBox = useRef<HTMLDivElement>(null);
+  const preset = customPicked ? undefined : BOOTH_PRESETS.find((x) => x.w === b.w && x.d === b.d);
+  const pickSize = (name: string) => {
+    if (name === CUSTOM_SIZE) {
+      setCustomPicked(true);
+      sizeBox.current?.querySelector<HTMLInputElement>('input[type="number"]')?.focus();
+      return;
+    }
+    const pr = BOOTH_PRESETS.find((x) => x.name === name);
+    if (pr && confirm('小間サイズを変更し、壁を作り直します。よろしいですか?')) {
+      setCustomPicked(false);
+      setB({ w: pr.w, d: pr.d }, true);
+    }
+  };
   return (
     <>
       <div className="insp-head">
@@ -322,22 +343,18 @@ function BoothPanel() {
       </div>
 
       <Section title="小間">
-        <select
-          className="sel"
-          value={BOOTH_PRESETS.find((x) => x.w === b.w && x.d === b.d)?.name ?? ''}
-          onChange={(e) => {
-            const pr = BOOTH_PRESETS.find((x) => x.name === e.target.value);
-            if (pr && confirm('小間サイズを変更し、壁を作り直します。よろしいですか?')) setB({ w: pr.w, d: pr.d }, true);
-          }}
-        >
-          <option value="">規格小間から選ぶ…</option>
+        <select className="sel" aria-label="小間サイズ" value={preset?.name ?? CUSTOM_SIZE} onChange={(e) => pickSize(e.target.value)}>
           {BOOTH_PRESETS.map((x) => (
             <option key={x.name}>{x.name}</option>
           ))}
+          <option value={CUSTOM_SIZE}>カスタムサイズ(寸法を入力)</option>
         </select>
-        <div className="stack">
-          <NumField label="間口" value={b.w} slider min={1000} max={Math.max(18000, b.w)} step={10} onStart={st.checkpoint} onChange={(v) => setB({ w: v })} onLive={(v) => st.setBooth({ w: v }, false, false)} />
-          <NumField label="奥行" value={b.d} slider min={1000} max={Math.max(18000, b.d)} step={10} onStart={st.checkpoint} onChange={(v) => setB({ d: v })} onLive={(v) => st.setBooth({ d: v }, false, false)} />
+        <div className="stack" ref={sizeBox}>
+          <NumField label="間口" value={b.w} slider min={1000} max={BOOTH_MAX} sliderMax={Math.max(18000, b.w)} step={10} onStart={st.checkpoint} onChange={(v) => setB({ w: v })} onLive={(v) => st.setBooth({ w: v }, false, false)} />
+          <NumField label="奥行" value={b.d} slider min={1000} max={BOOTH_MAX} sliderMax={Math.max(18000, b.d)} step={10} onStart={st.checkpoint} onChange={(v) => setB({ d: v })} onLive={(v) => st.setBooth({ d: v }, false, false)} />
+          <p className="hint">
+            {(b.w / 1000).toFixed(2)}m × {(b.d / 1000).toFixed(2)}m({((b.w * b.d) / 1e6).toFixed(2)}㎡)。間口・奥行は1〜60mで入力でき、壁も追従します。
+          </p>
           <NumField label="壁高" value={b.wallHeight} slider min={900} max={6000} step={10} onStart={st.checkpoint} onChange={(v) => setB({ wallHeight: v })} onLive={(v) => st.setBooth({ wallHeight: v }, false, false)} />
         </div>
         <div className="open-types">

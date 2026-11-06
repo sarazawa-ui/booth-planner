@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { Component, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
 import { Environment, Lightformer, OrbitControls } from '@react-three/drei';
 import { EffectComposer, N8AO, ToneMapping, Vignette } from '@react-three/postprocessing';
@@ -64,13 +65,17 @@ export default function Scene3D() {
 
   const onLost = () => {
     lostCount.current++;
-    if (useStore.getState().quality === 'high') {
-      useStore.getState().set({ quality: 'std' });
-      setNotice('GPUの負荷が高かったため、標準画質に切り替えて表示し直しました。');
-    } else {
-      setNotice('3D表示が中断されたため、表示し直しました。続く場合はブラウザの「ハードウェアアクセラレーション」が有効か確認してください。');
-    }
-    if (lostCount.current <= 3) setTimeout(() => setGen((g) => g + 1), 300);
+    const high = useStore.getState().quality === 'high';
+    setNotice(
+      high
+        ? 'GPUの負荷が高かったため、標準画質に切り替えて表示し直しました。'
+        : '3D表示が中断されたため、表示し直しました。続く場合はブラウザの「ハードウェアアクセラレーション」が有効か確認してください。',
+    );
+    // 失われた描画先のまま画質を変えると例外になるので、作り直しと同時に切り替える
+    flushSync(() => {
+      if (lostCount.current <= 3) setGen((g) => g + 1);
+      if (high) useStore.getState().set({ quality: 'std' });
+    });
   };
 
   if (!webgl) {
@@ -100,17 +105,12 @@ export default function Scene3D() {
           frameloop="demand"
           gl={{ preserveDrawingBuffer: true, antialias: true, toneMapping: THREE.NoToneMapping, powerPreference: 'high-performance' }}
           camera={{ fov: 38, near: 0.05, far: 200, position: [8, 5, 10] }}
-          onCreated={({ gl }) => {
-            gl.domElement.addEventListener('webglcontextlost', (e) => {
-              e.preventDefault();
-              onLost();
-            });
-          }}
           onPointerMissed={(e) => {
             const d = downPos.current;
             if (d && Math.hypot(e.clientX - d.x, e.clientY - d.y) < 4) useStore.getState().select(null);
           }}
         >
+          <ContextGuard onLost={onLost} />
           <SceneContent dropRef={dropRef} dpr={dpr} />
           {quality === 'high' ? (
             <EffectComposer multisampling={4} enableNormalPass={false}>
@@ -134,6 +134,26 @@ export default function Scene3D() {
       <CameraBar />
     </div>
   );
+}
+
+/**
+ * 表示中に GPU の描画が失われたことだけを検知する。
+ * 3D画面を閉じるときはライブラリ自身が同じ信号を出すので、閉じる前に監視をやめて誤検知を防ぐ。
+ */
+function ContextGuard({ onLost }: { onLost: () => void }) {
+  const gl = useThree((s) => s.gl);
+  const latest = useRef(onLost);
+  latest.current = onLost;
+  useEffect(() => {
+    const el = gl.domElement;
+    const handle = (e: Event) => {
+      e.preventDefault();
+      latest.current();
+    };
+    el.addEventListener('webglcontextlost', handle);
+    return () => el.removeEventListener('webglcontextlost', handle);
+  }, [gl]);
+  return null;
 }
 
 class SceneErrorBoundary extends Component<{ children: React.ReactNode; onRetry: () => void }, { error: string | null }> {
@@ -303,7 +323,7 @@ function SceneContent({ dropRef, dpr }: { dropRef: React.MutableRefObject<((e: R
   return (
     <>
       <color attach="background" args={['#c9ccd0']} />
-      <fog attach="fog" args={['#c9ccd0', 22, 70]} />
+      <fog attach="fog" args={['#c9ccd0', 22 + span * 1.5, 70 + span * 3]} />
       <hemisphereLight args={['#ffffff', '#7d8086', 0.22]} />
       <directionalLight
         ref={dirLight}
@@ -341,7 +361,7 @@ function SceneContent({ dropRef, dpr }: { dropRef: React.MutableRefObject<((e: R
         target={[W / 2, 1, D / 2]}
         maxPolarAngle={Math.PI / 2 - 0.02}
         minDistance={0.6}
-        maxDistance={60}
+        maxDistance={Math.max(60, span * 6)}
         enableDamping
         dampingFactor={0.12}
       />

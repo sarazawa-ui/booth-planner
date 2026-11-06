@@ -11,6 +11,7 @@ export function NumField({
   onStart,
   min,
   max,
+  sliderMax,
   step = 10,
   unit = 'mm',
   disabled,
@@ -26,6 +27,8 @@ export function NumField({
   onStart?: () => void;
   min?: number;
   max?: number;
+  /** スライダーの上限(入力できる上限 max より狭くしたいとき) */
+  sliderMax?: number;
   step?: number;
   unit?: string;
   disabled?: boolean;
@@ -128,9 +131,9 @@ export function NumField({
           type="range"
           className="num-range"
           min={min}
-          max={max}
+          max={sliderMax ?? max}
           step={step}
-          value={Math.min(max, Math.max(min, value))}
+          value={Math.min(sliderMax ?? max, Math.max(min, value))}
           disabled={disabled}
           onPointerDown={() => onStart?.()}
           onKeyDown={() => onStart?.()}

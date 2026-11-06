@@ -19,18 +19,20 @@ export function floorTopOf(b: Booth) {
 // ---- 会場 ----
 
 export const Hall = memo(function Hall({ booth }: { booth: Booth }) {
+  // 大きな小間でも床が途切れないよう、小間に合わせて広げる(テクスチャは4m角)
+  const size = Math.max(80, mm(Math.max(booth.w, booth.d)) * 4);
   const mat = useMemo(() => {
     const { map } = concrete();
     const m = map.clone();
-    m.repeat.set(20, 20);
+    m.repeat.set(size / 4, size / 4);
     m.needsUpdate = true;
     return new THREE.MeshStandardMaterial({ map: m, color: '#d8d6d1', roughness: 0.62, metalness: 0.0 });
-  }, []);
+  }, [size]);
   const cx = mm(booth.w) / 2;
   const cz = mm(booth.d) / 2;
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[cx, 0, cz]} material={mat} receiveShadow>
-      <planeGeometry args={[80, 80]} />
+      <planeGeometry args={[size, size]} />
     </mesh>
   );
 });
