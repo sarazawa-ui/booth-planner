@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { produce, setAutoFreeze } from 'immer';
 import type { Asset, Booth, Item, Project, Selection, Wall } from './types';
 import { SURFACE_KINDS, defOf } from './catalog';
-import { insideFootprint, normDeg, presetWalls, supportTop, snapToWall, uid, wallInset, wallLen, wallNormal, wallThickness } from './lib/geom';
+import { normDeg, presetWalls, ridersOf, supportTop, snapToWall, uid, wallInset, wallLen, wallNormal, wallThickness } from './lib/geom';
 import { deleteAssetDb, loadAllAssets, loadProjectDb, saveAssetDb, saveProjectDb } from './lib/assets';
 
 export type ViewMode = 'split' | 'plan' | '3d';
@@ -222,9 +222,17 @@ export const useStore = create<State>((set, get) => ({
     return it.id;
   },
   updateItem(id, patch, history = true) {
+    // 台の高さが変わったら、上に載っている物も一緒に上下させる
+    const cur = get().project.items.find((i) => i.id === id);
+    const dz = cur ? (patch.elev ?? cur.elev) + (patch.h ?? cur.h) - (cur.elev + cur.h) : 0;
+    const riders = cur && dz !== 0 && SURFACE_KINDS.has(cur.kind) ? ridersOf(cur, get().project.items, SURFACE_KINDS) : [];
     get().mutate((p) => {
       const it = p.items.find((i) => i.id === id);
       if (it) Object.assign(it, patch);
+      riders.forEach((r) => {
+        const m = p.items.find((i) => i.id === r.id);
+        if (m) m.elev += dz;
+      });
     }, history);
   },
   moveItem(id, x, y, freeSnap) {
@@ -249,14 +257,16 @@ export const useStore = create<State>((set, get) => ({
       }
     }
     const def = defOf(it.kind);
-    // 卓上モニター等は下の天板の高さへ自動で載せる
-    if (def.stack && !freeSnap) patch.elev = supportTop(it, patch.x ?? x, patch.y ?? y, project.items, SURFACE_KINDS);
     // 展示台等を動かしたら、上に載っている物も一緒に動かす
-    const riders = SURFACE_KINDS.has(it.kind)
-      ? project.items.filter((r) => r.id !== it.id && defOf(r.kind).stack && Math.abs(r.elev - (it.elev + it.h)) < 5 && insideFootprint(it, r.x, r.y))
-      : [];
+    const riders = SURFACE_KINDS.has(it.kind) ? ridersOf(it, project.items, SURFACE_KINDS) : [];
+    // 卓上モニター等は下の天板の高さへ自動で載せる(自分の上に載っている物には載らない)
+    if (def.stack && !freeSnap) {
+      const others = project.items.filter((i) => !riders.some((r) => r.id === i.id));
+      patch.elev = supportTop(it, patch.x ?? x, patch.y ?? y, others, SURFACE_KINDS);
+    }
     const dx = (patch.x ?? it.x) - it.x;
     const dy = (patch.y ?? it.y) - it.y;
+    const dz = (patch.elev ?? it.elev) - it.elev;
     get().mutate((p) => {
       const t = p.items.find((i) => i.id === id);
       if (t) Object.assign(t, patch);
@@ -265,6 +275,7 @@ export const useStore = create<State>((set, get) => ({
         if (m) {
           m.x += dx;
           m.y += dy;
+          m.elev += dz;
         }
       });
     }, false);
@@ -314,6 +325,10 @@ export const useStore = create<State>((set, get) => ({
       const step = Math.max(it.w, 200) + 100;
       copy.x += Math.cos(r) * step;
       copy.y += Math.sin(r) * step;
+      // 台に載っていた物は、複製先の高さに置き直す(台からはみ出たら床へ)
+      if (defOf(it.kind).stack && Math.abs(it.elev - supportTop(it, it.x, it.y, p0.items, SURFACE_KINDS)) < 5) {
+        copy.elev = supportTop(copy, copy.x, copy.y, p0.items, SURFACE_KINDS);
+      }
       get().mutate((p) => {
         p.items.push(copy);
       });

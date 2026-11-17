@@ -126,7 +126,7 @@ function ItemPanel({ it }: { it: Item }) {
           </button>
         </div>
         {def.mount === 'wall' && <p className="hint">壁の近くへドラッグすると壁面に吸着します(Altキーで解除)。</p>}
-        {def.stack && <p className="hint">展示台・テーブル・カウンターの上へドラッグすると天板の高さに自動で載ります(Altキーで解除)。</p>}
+        {def.stack && <p className="hint">展示台・テーブル・カウンターの上へドラッグすると天板の高さに自動で載ります(Altキーで解除)。台を選んだ状態で一覧から追加すると、その上に置かれます。</p>}
         <p className="hint">▲▼は長押しで連続変化、Shift+クリックで10倍刻み。</p>
       </Section>
 
@@ -147,7 +147,7 @@ function ItemPanel({ it }: { it: Item }) {
       )}
 
       {def.graphic && (
-        <Section title={it.kind === 'cutout' ? 'ロゴ画像(透過PNG推奨)' : it.kind.startsWith('monitor') ? '画面に表示する画像' : '貼付グラフィック'}>
+        <Section title={def.graphicTitle ?? (it.kind === 'cutout' ? 'ロゴ画像(透過PNG推奨)' : it.kind.startsWith('monitor') ? '画面に表示する画像' : '貼付グラフィック')}>
           <ImagePicker label="画像" value={it.graphic} onChange={(g) => up({ graphic: g })} sizeHint={`仕上り ${fmtMm(it.w)}×${fmtMm(it.h)}`} />
         </Section>
       )}

@@ -210,6 +210,21 @@ export function insideFootprint(s: Item, x: number, y: number, margin = 0) {
   return Math.abs(u) <= s.w / 2 + margin && Math.abs(v) <= s.d / 2 + margin;
 }
 
+/** base の天板に載っている物(載せ物の上に載っている物も含む) */
+export function ridersOf(base: Item, items: Item[], surfaces: Set<string>) {
+  const found = new Map<string, Item>();
+  const walk = (b: Item) => {
+    for (const r of items) {
+      if (r.id === base.id || found.has(r.id) || !defOf(r.kind).stack) continue;
+      if (Math.abs(r.elev - (b.elev + b.h)) >= 5 || !insideFootprint(b, r.x, r.y)) continue;
+      found.set(r.id, r);
+      if (surfaces.has(r.kind)) walk(r);
+    }
+  };
+  walk(base);
+  return [...found.values()];
+}
+
 /** 載せ物(卓上モニター等)の下にある天板の高さ。なければ 0(床) */
 export function supportTop(it: Item, x: number, y: number, items: Item[], surfaces: Set<string>) {
   let top = 0;

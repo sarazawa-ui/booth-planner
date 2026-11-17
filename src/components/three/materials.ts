@@ -25,6 +25,10 @@ export const fabric = (color: string) =>
 export const plastic = (color: string) =>
   get(`pl:${color}`, () => new THREE.MeshPhysicalMaterial({ color, roughness: 0.35, metalness: 0, clearcoat: 0.5, clearcoatRoughness: 0.3 }));
 
+/** 塗装した金属(缶・機械の外装) */
+export const metalPaint = (color: string) =>
+  get(`mp:${color}`, () => new THREE.MeshStandardMaterial({ color, roughness: 0.34, metalness: 0.55 }));
+
 export const aluminum = () =>
   get('alu', () => new THREE.MeshStandardMaterial({ color: '#d2d5d9', roughness: 0.3, metalness: 0.9 }));
 

@@ -1,57 +1,17 @@
 import * as THREE from 'three';
 import { memo, useEffect, useLayoutEffect, useMemo, useState } from 'react';
-import { RoundedBox } from '@react-three/drei';
 import type { ThreeEvent } from '@react-three/fiber';
 import type { Item, LightSetting } from '../../types';
 import { defOf } from '../../catalog';
 import { useStore } from '../../store';
 import { aluminum, blackMetal, chrome, emissive, fabric, foliage, glass, melamine, paint, plastic, screenOff, shade } from './materials';
 import { GraphicCylinder, GraphicPlane } from './Graphic3D';
+import { Box, Cyl, RBox, Rod, type V3 } from './prims';
+import { MockBody } from './Mocks3D';
 import { kelvinToColor, punchCarpet, textTexture, useHtmlImage } from '../../lib/textures';
 import { loadModel, modelBounds } from '../../lib/models';
 
-type V3 = [number, number, number];
 const mm = (v: number) => v / 1000;
-
-function Box({ s, p, m, r, noShadow }: { s: V3; p: V3; m: THREE.Material; r?: V3; noShadow?: boolean }) {
-  return (
-    <mesh position={p} rotation={r} material={m} castShadow={!noShadow} receiveShadow>
-      <boxGeometry args={s} />
-    </mesh>
-  );
-}
-
-function RBox({ s, p, m, radius = 0.006 }: { s: V3; p: V3; m: THREE.Material; radius?: number }) {
-  const rr = Math.min(radius, Math.min(...s) / 2.2);
-  return (
-    <RoundedBox args={s} radius={rr} smoothness={3} position={p} material={m} castShadow receiveShadow />
-  );
-}
-
-function Cyl({ r, r2, h, p, m, seg = 40, rot }: { r: number; r2?: number; h: number; p: V3; m: THREE.Material; seg?: number; rot?: V3 }) {
-  return (
-    <mesh position={p} rotation={rot} material={m} castShadow receiveShadow>
-      <cylinderGeometry args={[r, r2 ?? r, h, seg]} />
-    </mesh>
-  );
-}
-
-/** 2点を結ぶ細い棒 */
-function Rod({ a, b, r, m }: { a: V3; b: V3; r: number; m: THREE.Material }) {
-  const { pos, quat, len } = useMemo(() => {
-    const va = new THREE.Vector3(...a);
-    const vb = new THREE.Vector3(...b);
-    const dir = vb.clone().sub(va);
-    const len = dir.length();
-    const quat = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize());
-    return { pos: va.add(vb).multiplyScalar(0.5), quat, len };
-  }, [a, b]);
-  return (
-    <mesh position={pos} quaternion={quat} material={m} castShadow>
-      <cylinderGeometry args={[r, r, len, 10]} />
-    </mesh>
-  );
-}
 
 // ---- 照明 ----
 
@@ -546,6 +506,16 @@ function Body({ it }: { it: Item }) {
       return <Person it={it} />;
     case 'model':
       return <ModelBody it={it} />;
+    case 'mock_box':
+    case 'mock_cylinder':
+    case 'mock_bottle':
+    case 'mock_can':
+    case 'mock_device':
+    case 'mock_ctrlbox':
+    case 'mock_motor':
+    case 'mock_compressor':
+    case 'mock_machine':
+      return <MockBody it={it} />;
     default:
       return <RBox s={[W, H, D]} p={[0, H / 2, 0]} m={paint(col)} />;
   }

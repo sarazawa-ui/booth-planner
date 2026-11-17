@@ -1,5 +1,5 @@
 import type { Asset, Item, Project } from '../types';
-import { CARPET_COLORS, WALL_COLORS, FURNITURE_COLORS, CHAIR_COLORS, defOf, itemLabel } from '../catalog';
+import { CARPET_COLORS, WALL_COLORS, FURNITURE_COLORS, CHAIR_COLORS, MOCK_COLORS, defOf, itemLabel } from '../catalog';
 import { fmtMm, octaCount, wallLen } from './geom';
 
 export interface EstRow {
@@ -11,11 +11,11 @@ export interface EstRow {
   note: string;
 }
 
-const GROUP_ORDER = ['基礎', '壁面・造作', '床', 'グラフィック', '展示台', 'ケース・カウンター', '家具', '照明', '映像・電気', '造作', '持込品'];
+const GROUP_ORDER = ['基礎', '壁面・造作', '床', 'グラフィック', '展示台', 'ケース・カウンター', '家具', '照明', '映像・電気', '造作', '展示モック', '持込品'];
 
 function colorName(hex: string | undefined) {
   if (!hex) return '';
-  const all = [...WALL_COLORS, ...CARPET_COLORS, ...FURNITURE_COLORS, ...CHAIR_COLORS];
+  const all = [...WALL_COLORS, ...CARPET_COLORS, ...FURNITURE_COLORS, ...CHAIR_COLORS, ...MOCK_COLORS];
   return all.find((c) => c.hex.toLowerCase() === hex.toLowerCase())?.name ?? hex;
 }
 

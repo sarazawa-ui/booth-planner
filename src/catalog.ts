@@ -1,9 +1,10 @@
 import type { Item } from './types';
 
-export type CategoryId = 'stage' | 'case' | 'furniture' | 'light' | 'graphic' | 'av' | 'deco';
+export type CategoryId = 'stage' | 'mock' | 'case' | 'furniture' | 'light' | 'graphic' | 'av' | 'deco';
 
 export const CATEGORIES: { id: CategoryId; name: string }[] = [
   { id: 'stage', name: '展示台' },
+  { id: 'mock', name: '展示モック' },
   { id: 'case', name: 'ケース・カウンター' },
   { id: 'furniture', name: '家具' },
   { id: 'light', name: '照明' },
@@ -45,6 +46,8 @@ export interface CatalogDef {
   noEstimate?: boolean;
   /** w,d,h のうちサイズ変更を許すもの */
   resizable?: ('w' | 'd' | 'h')[];
+  /** 画像欄の見出し(未指定なら品目に応じた既定の見出し) */
+  graphicTitle?: string;
   /** 展示台・テーブル等の上に置くもの(下にある天板の高さへ自動で載る) */
   stack?: boolean;
   /** 一覧のアイコン(24x24 viewBox の SVG path) */
@@ -68,6 +71,19 @@ export const CHAIR_COLORS = [
   { name: 'ブルー', hex: '#2c5d9c' },
   { name: 'レッド', hex: '#b3282d' },
   { name: 'グリーン', hex: '#3d7a4f' },
+];
+
+export const MOCK_COLORS = [
+  { name: 'ホワイト', hex: '#f3f2ee' },
+  { name: 'オフホワイト', hex: '#e4e5e3' },
+  { name: 'ライトグレー', hex: '#c9cbcc' },
+  { name: 'シルバー', hex: '#9fa4a9' },
+  { name: 'ブラック', hex: '#2a2b2d' },
+  { name: 'ネイビー', hex: '#24324f' },
+  { name: 'ブルー', hex: '#2c5d9c' },
+  { name: 'レッド', hex: '#b3282d' },
+  { name: 'グリーン', hex: '#3d7a4f' },
+  { name: 'イエロー', hex: '#d9a53a' },
 ];
 
 export const CARPET_COLORS = [
@@ -127,6 +143,13 @@ const ICON = {
   hanground: 'M12 2v5 M5 8a7 2 0 1 0 14 0a7 2 0 1 0-14 0 M5 8v6a7 2 0 0 0 14 0V8',
   cutout: 'M4 7h4v10H4z M10 7h4l2 5-2 5h-4z M18 7v10',
   monitor: 'M3 4h18v11H3z M12 15v4 M7 21h10',
+  bottle: 'M10 2h4v3h-4z M10 5l-2 4v12h8V9l-2-4 M8 12h8 M8 17h8',
+  can: 'M7 5a5 2 0 1 0 10 0a5 2 0 1 0-10 0 M7 5v14a5 2 0 0 0 10 0V5 M7 9h10',
+  device: 'M3 7h18v10H3z M5 9h8v6H5z M16 10h3 M16 13h3 M5 17v2 M19 17v2',
+  ctrlbox: 'M5 3h14v18H5z M8 6h1 M11.5 6h1 M15 6h1 M8 9h8v6H8z M15 18h1',
+  machine: 'M3 20h18 M4 20V7h16v13 M7 10h7v7H7z M16 10h2v3h-2z M18 7V3 M16 3h4',
+  motor: 'M3 8h13v9H3z M6 8v9 M9 8v9 M12 8v9 M16 11h5v3h-5 M4 17l-1 3h13l-1-3',
+  compressor: 'M5 13h14a3 3 0 0 1 0 6H5a3 3 0 0 1 0-6z M8 13V8h8v5 M12 8V5 M7 19v2 M17 19v2',
   deskmonitor: 'M5 5h14v9H5z M12 14v3 M8 17h8 M2 20h20',
   tablet: 'M8 4h8v12H8z M11 14h2 M7 19l5-3 5 3',
   catalogdesk: 'M4 20h16 M5 20l2-6h4l-1 6 M10 20l2-9h4l-1 9 M15 20l2-12h4l-2 12',
@@ -175,6 +198,93 @@ export const CATALOG: CatalogDef[] = [
   {
     kind: 'stage_acrylic', cat: 'stage', name: 'アクリルカバー付展示台', w: 450, d: 450, h: 1200, color: '#f3f2ee', colors: FURNITURE_COLORS,
     unit: '台', estimate: '展示台', resizable: ['w', 'd', 'h'], icon: ICON.case,
+  },
+
+  // 展示モック
+  {
+    kind: 'mock_box', cat: 'mock', name: '直方体', w: 200, d: 200, h: 200, color: '#f3f2ee', colors: MOCK_COLORS, graphic: true, graphicTitle: '前面の画像', stack: true,
+    sizes: [
+      { label: '小箱 W100×D100×H150', w: 100, d: 100, h: 150 },
+      { label: '製品箱 W300×D200×H150', w: 300, d: 200, h: 150 },
+      { label: 'A4厚型 W297×D210×H50', w: 297, d: 210, h: 50 },
+      { label: '中箱 W400×D300×H300', w: 400, d: 300, h: 300 },
+      { label: '大箱 W600×D400×H400', w: 600, d: 400, h: 400 },
+    ],
+    unit: '点', estimate: '展示モック', resizable: ['w', 'd', 'h'], icon: ICON.box,
+  },
+  {
+    kind: 'mock_cylinder', cat: 'mock', name: '円柱', w: 150, d: 150, h: 300, round: true, color: '#c9cbcc', colors: MOCK_COLORS, stack: true,
+    sizes: [
+      { label: 'φ100×H200', w: 100, d: 100, h: 200 },
+      { label: 'φ150×H300', w: 150, d: 150, h: 300 },
+      { label: 'φ300×H150', w: 300, d: 300, h: 150 },
+    ],
+    unit: '点', estimate: '展示モック', resizable: ['w', 'h'], icon: ICON.round,
+  },
+  {
+    kind: 'mock_bottle', cat: 'mock', name: 'ボトル', w: 65, d: 65, h: 205, round: true, color: '#2c5d9c', colors: MOCK_COLORS, graphic: true, graphicTitle: 'ラベルの画像', stack: true,
+    sizes: [
+      { label: '250ml φ52×H150', w: 52, d: 52, h: 150 },
+      { label: '500ml φ65×H205', w: 65, d: 65, h: 205 },
+      { label: '1L φ85×H260', w: 85, d: 85, h: 260 },
+      { label: '2L φ105×H310', w: 105, d: 105, h: 310 },
+    ],
+    unit: '点', estimate: '展示モック', resizable: ['w', 'h'], icon: ICON.bottle,
+  },
+  {
+    kind: 'mock_can', cat: 'mock', name: '缶', w: 66, d: 66, h: 122, round: true, color: '#b3282d', colors: MOCK_COLORS, graphic: true, graphicTitle: 'ラベルの画像', stack: true,
+    sizes: [
+      { label: '350ml φ66×H122', w: 66, d: 66, h: 122 },
+      { label: '500ml φ66×H167', w: 66, d: 66, h: 167 },
+      { label: '4L缶 φ170×H190', w: 170, d: 170, h: 190 },
+      { label: '18L缶 φ290×H350', w: 290, d: 290, h: 350 },
+    ],
+    unit: '点', estimate: '展示モック', resizable: ['w', 'h'], icon: ICON.can,
+  },
+  {
+    kind: 'mock_device', cat: 'mock', name: '小型機器(卓上)', w: 300, d: 250, h: 180, color: '#c9cbcc', colors: MOCK_COLORS, graphic: true, graphicTitle: '画面に表示する画像', stack: true,
+    sizes: [
+      { label: '小 W200×D160×H110', w: 200, d: 160, h: 110 },
+      { label: '中 W300×D250×H180', w: 300, d: 250, h: 180 },
+      { label: '大 W450×D400×H300', w: 450, d: 400, h: 300 },
+    ],
+    unit: '点', estimate: '展示モック', resizable: ['w', 'd', 'h'], icon: ICON.device,
+  },
+  {
+    kind: 'mock_ctrlbox', cat: 'mock', name: '制御ボックス', w: 400, d: 200, h: 500, color: '#c9cbcc', colors: MOCK_COLORS, graphic: true, graphicTitle: '画面に表示する画像', stack: true,
+    sizes: [
+      { label: '小 W300×D150×H400', w: 300, d: 150, h: 400 },
+      { label: '中 W400×D200×H500', w: 400, d: 200, h: 500 },
+      { label: '大 W600×D250×H800', w: 600, d: 250, h: 800 },
+    ],
+    unit: '点', estimate: '展示モック', resizable: ['w', 'd', 'h'], icon: ICON.ctrlbox,
+  },
+  {
+    kind: 'mock_motor', cat: 'mock', name: 'モーター', w: 400, d: 220, h: 240, color: '#2c5d9c', colors: MOCK_COLORS, stack: true,
+    sizes: [
+      { label: '小 W250×D140×H150', w: 250, d: 140, h: 150 },
+      { label: '中 W400×D220×H240', w: 400, d: 220, h: 240 },
+      { label: '大 W700×D380×H420', w: 700, d: 380, h: 420 },
+    ],
+    unit: '点', estimate: '展示モック', resizable: ['w', 'd', 'h'], icon: ICON.motor,
+  },
+  {
+    kind: 'mock_compressor', cat: 'mock', name: 'コンプレッサー', w: 900, d: 380, h: 750, color: '#b3282d', colors: MOCK_COLORS, stack: true,
+    sizes: [
+      { label: '小型 W500×D220×H450', w: 500, d: 220, h: 450 },
+      { label: '中型 W900×D380×H750', w: 900, d: 380, h: 750 },
+      { label: '大型 W1500×D550×H1200', w: 1500, d: 550, h: 1200 },
+    ],
+    unit: '点', estimate: '展示モック', resizable: ['w', 'd', 'h'], icon: ICON.compressor,
+  },
+  {
+    kind: 'mock_machine', cat: 'mock', name: '産業機械', w: 1200, d: 800, h: 1600, color: '#e4e5e3', colors: MOCK_COLORS, graphic: true, graphicTitle: '操作画面に表示する画像', stack: true,
+    sizes: [
+      { label: '小型 W800×D600×H1200', w: 800, d: 600, h: 1200 },
+      { label: '中型 W1200×D800×H1600', w: 1200, d: 800, h: 1600 },
+      { label: '大型 W2000×D1200×H2000', w: 2000, d: 1200, h: 2000 },
+    ],
+    unit: '点', estimate: '展示モック', resizable: ['w', 'd', 'h'], icon: ICON.machine,
   },
 
   // ケース・カウンター
@@ -395,7 +505,7 @@ export const CATALOG: CatalogDef[] = [
 ];
 
 /** 上に物を載せられる天板を持つもの */
-export const SURFACE_KINDS = new Set(['stage_box', 'stage_low', 'stage_round', 'counter', 'counter_storage', 'table_round', 'table_rect', 'table_high', 'case_low']);
+export const SURFACE_KINDS = new Set(['stage_box', 'stage_low', 'stage_round', 'counter', 'counter_storage', 'table_round', 'table_rect', 'table_high', 'case_low', 'mock_box', 'mock_cylinder']);
 
 export const MODEL_DEF: CatalogDef = {
   kind: 'model', cat: 'model', name: '持込品(3Dモデル)', w: 500, d: 500, h: 500, stack: true,
