@@ -925,10 +925,45 @@ textarea:focus {
   display: none;
 }
 
+.pf-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.pf-table > thead,
+.pf-table > tfoot {
+  display: none;
+}
+.pf-cell {
+  padding: 0;
+  vertical-align: top;
+}
+
 @media print {
+  /* 余白0: Chrome / Edge は印刷画面の「ヘッダーとフッター」を出さなくなる */
   @page {
     size: A4 portrait;
-    margin: 10mm;
+    margin: 0;
+  }
+  /* 表の見出しの色は残し、紙面は白にする(画面の背景色は :root に付いている) */
+  :root,
+  body {
+    background: #fff;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  /* 各ページの上下余白(表の見出し・末尾の行は改ページごとに繰り返される) */
+  .pf-table > thead {
+    display: table-header-group;
+  }
+  .pf-table > tfoot {
+    display: table-footer-group;
+  }
+  .pf-gap {
+    height: 12mm;
+    padding: 0;
+  }
+  .pf-cell {
+    padding: 0 12mm;
   }
   body * {
     visibility: hidden;
